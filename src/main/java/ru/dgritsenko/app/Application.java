@@ -58,13 +58,41 @@ public class Application {
         System.out.println("=== Полная статистика:");
         System.out.println(fullStatistic);
 
+        // Примеры списков с разными типами данных, которые подлежат сортировке
+
         List<String> file1 = new ArrayList<>();
         file1.add("Нормальная форма числа с плавающей запятой");
         file1.add("15.28535047E-25");
         file1.add("Long");
         file1.add("1234567890123456789");
-
         sortInputFile(file1);
+
+        List<String> file2 = new ArrayList<>();
+        file2.add("42");
+        file2.add("3.14");
+        file2.add("Java Programming");
+        file2.add("-1000000");
+        file2.add("2.71828");
+        sortInputFile(file2);
+
+        List<String> file3 = new ArrayList<>();
+        file3.add("0");
+        file3.add("Hello World");
+        file3.add("-15.75");
+        file3.add("987654321");
+        file3.add("1.602176634E-19");
+        file3.add("Data Processing");
+        sortInputFile(file3);
+
+        List<String> file4 = new ArrayList<>();
+        file4.add("1234567890");
+        file4.add("Artificial Intelligence");
+        file4.add("-273.15");
+        file4.add("100");
+        file4.add("9.80665");
+        file4.add("Machine Learning");
+        file4.add("1.61803398875");
+        sortInputFile(file4);
     }
 
     private static void parseArgs(List<String> args) {
@@ -128,17 +156,10 @@ public class Application {
             }
         }
 
-        for (long currentInteger : integers) {
-            System.out.println("Целые числа:" + currentInteger);
-        }
-
-        for (Double currentFloat : floats) {
-            System.out.println("Вещественные числа: " + currentFloat);
-        }
-
-        System.out.println("Строки: ");
-        for (String currentString : strings) {
-            System.out.print(currentString + ", ");
-        }
+        System.out.println("=== Результат: ");
+        System.out.println("Целые числа: " + integers);
+        System.out.println("Вещественные числа: " + floats);
+        System.out.println("Строки: " + strings);
+        System.out.println();
     }
 }
