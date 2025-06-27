@@ -3,6 +3,7 @@ package ru.dgritsenko.app;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Application {
     private static List<String> sourcePaths;
@@ -56,6 +57,14 @@ public class Application {
 
         System.out.println("=== Полная статистика:");
         System.out.println(fullStatistic);
+
+        List<String> file1 = new ArrayList<>();
+        file1.add("Нормальная форма числа с плавающей запятой");
+        file1.add("15.28535047E-25");
+        file1.add("Long");
+        file1.add("1234567890123456789");
+
+        sortInputFile(file1);
     }
 
     private static void parseArgs(List<String> args) {
@@ -94,6 +103,42 @@ public class Application {
             } else if (!isNextArgParam && arg.endsWith(".txt")) {
                 sourcePaths.add(arg);
             }
+        }
+    }
+
+    private static void sortInputFile(List<String> inputFile) {
+        List<String> lines = new ArrayList<>(inputFile);
+
+        Pattern longPattern = Pattern.compile("^-?\\d+$");
+        Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
+
+        List <Long> integers = new ArrayList<>();
+        List <Double> floats = new ArrayList<>();
+        List <String> strings = new ArrayList<>();
+
+        for (String line : lines) {
+            line = line.trim();
+
+            if (longPattern.matcher(line).matches()) {
+                integers.add(Long.parseLong(line));
+            } else if (doublePattern.matcher(line).matches()) {
+                floats.add(Double.parseDouble(line));
+            } else {
+                strings.add(line);
+            }
+        }
+
+        for (long currentInteger : integers) {
+            System.out.println("Целые числа:" + currentInteger);
+        }
+
+        for (Double currentFloat : floats) {
+            System.out.println("Вещественные числа: " + currentFloat);
+        }
+
+        System.out.println("Строки: ");
+        for (String currentString : strings) {
+            System.out.print(currentString + ", ");
         }
     }
 }
