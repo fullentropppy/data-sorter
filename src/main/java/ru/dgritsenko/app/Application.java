@@ -1,114 +1,68 @@
 package ru.dgritsenko.app;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class Application {
+    private static String currentDir;
+
     private static List<String> sourcePaths;
     private static String resultPath;
     private static String filePrefix;
-    /**
-     * <ul>
-     *  <li>{@code type1} - режим 1</li>
-     *  <li>{@code type2} - режим 2</li>
-     * </ul>
-     */
-    private static String fileWritingMode;
+    private static boolean addToFile;
     private static boolean simpleStatistic;
     private static boolean fullStatistic;
 
     /**
      * Возможные параметры запуска:
      * <ul>
-     *  <li> {@code -o} - путь для результатов {@code (-o /some/path)}</li>
-     *  <li> {@code -p} - префикс для выходных файлов {@code (-p result_)}</li>
-     *  <li> {@code -a} - режим добавления в существующие файлы {@code (-a type1)}</li>
-     *  <li> {@code -s} - краткая статистика</li>
-     *  <li> {@code -f} - полная статистика</li>
+     *  <li> {@code -o} - путь для результатов {@code (-o /some/path)}
+     *  <li> {@code -p} - префикс для выходных файлов {@code (-p result_)}
+     *  <li> {@code -a} - режим добавления в существующие файлы вместо перезаписи
+     *  <li> {@code -s} - краткая статистика
+     *  <li> {@code -f} - полная статистика
+     *  <li> {@code .txt} - прочие параметры начинающиеся {@code .txt}
+     *  воспринимаются как имена файлов для загрузки данных для сортировки.
+     *  <ul>
+     *      <li> если указано только имя файла, то будет выполнена попытка загрузить файл
+     *      из каталога, где запущено приложение
+     *      <li> если указано полное имя файла, будет выполнена попытка загрузить файл
+     *      из с использованием полного имени
+     *  </ul>
      * </ul>
      */
     public static void main(String[] args) {
+        currentDir = System.getProperty("user.dir");
+
+        // Параметры по умолчанию
         sourcePaths = new ArrayList<>();
-        resultPath = "";
+        resultPath = currentDir;
         filePrefix = "";
-        fileWritingMode = "";
+        addToFile = false;
 
         List<String> params = new ArrayList<>(Arrays.asList(args));
-        parseArgs(params);
+        setParams(params);
 
-        System.out.println("=== Пути к файлам:");
-        for (String path : sourcePaths) {
-            System.out.println(path);
+        List<String> inputtList = new ArrayList<>();
+
+        for (String sourcePath : sourcePaths) {
+            String fileFullName = sourcePath.contains(File.separator) ? sourcePath : currentDir + File.separator + sourcePath;
+            loadToList(fileFullName, inputtList);
         }
 
-        System.out.println("=== Путь к результатам:");
-        System.out.println(resultPath);
-
-        System.out.println("=== Префикс файлов:");
-        System.out.println(filePrefix);
-
-        System.out.println("=== Тип записи:");
-        System.out.println(fileWritingMode);
-
-        System.out.println("=== Простая статистика:");
-        System.out.println(simpleStatistic);
-
-        System.out.println("=== Полная статистика:");
-        System.out.println(fullStatistic);
-
-        // Примеры списков с разными типами данных, которые подлежат сортировке
-
-        List<String> file1 = new ArrayList<>();
-        file1.add("Нормальная форма числа с плавающей запятой");
-        file1.add("15.28535047E-25");
-        file1.add("Long");
-        file1.add("1234567890123456789");
-        sortInputFile(file1);
-
-        List<String> file2 = new ArrayList<>();
-        file2.add("42");
-        file2.add("3.14");
-        file2.add("Java Programming");
-        file2.add("-1000000");
-        file2.add("2.71828");
-        sortInputFile(file2);
-
-        List<String> file3 = new ArrayList<>();
-        file3.add("0");
-        file3.add("Hello World");
-        file3.add("-15.75");
-        file3.add("987654321");
-        file3.add("1.602176634E-19");
-        file3.add("Data Processing");
-        sortInputFile(file3);
-
-        List<String> file4 = new ArrayList<>();
-        file4.add("1234567890");
-        file4.add("Artificial Intelligence");
-        file4.add("-273.15");
-        file4.add("100");
-        file4.add("9.80665");
-        file4.add("Machine Learning");
-        file4.add("1.61803398875");
-        sortInputFile(file4);
+        sortListAndSave(inputtList);
     }
 
-    private static void parseArgs(List<String> args) {
+    private static void setParams(List<String> args) {
         List<String> possibleParams = new ArrayList<>();
         possibleParams.add("-o");
         possibleParams.add("-p");
         possibleParams.add("-a");
         possibleParams.add("-s");
         possibleParams.add("-f");
-
-//        args.add("-s");
-//        args.add("-a");
-//        args.add("-p");
-//        args.add("sample-");
-//        args.add("in1.txt");
-//        args.add("in2.txt");
 
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
@@ -121,9 +75,8 @@ public class Application {
             } else if (arg.equals("-p") && !isNextArgParam) {
                 filePrefix = nextArg;
                 i++;
-            } else if (arg.equals("-a") && !isNextArgParam) {
-                fileWritingMode = nextArg;
-                i++;
+            } else if (arg.equals("-a")) {
+                addToFile = true;
             } else if (arg.equals("-s")) {
                 simpleStatistic = true;
             } else if (arg.equals("-f")) {
@@ -134,32 +87,75 @@ public class Application {
         }
     }
 
-    private static void sortInputFile(List<String> inputFile) {
-        List<String> lines = new ArrayList<>(inputFile);
+    private static void sortListAndSave(List<String> list) {
+        List<String> lines = new ArrayList<>(list);
 
         Pattern longPattern = Pattern.compile("^-?\\d+$");
         Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
 
-        List <Long> integers = new ArrayList<>();
-        List <Double> floats = new ArrayList<>();
+        List <Long> longs = new ArrayList<>();
+        List <Double> doubles = new ArrayList<>();
         List <String> strings = new ArrayList<>();
 
         for (String line : lines) {
             line = line.trim();
 
             if (longPattern.matcher(line).matches()) {
-                integers.add(Long.parseLong(line));
+                longs.add(Long.parseLong(line));
             } else if (doublePattern.matcher(line).matches()) {
-                floats.add(Double.parseDouble(line));
+                doubles.add(Double.parseDouble(line));
             } else {
                 strings.add(line);
             }
         }
 
-        System.out.println("=== Результат: ");
-        System.out.println("Целые числа: " + integers);
-        System.out.println("Вещественные числа: " + floats);
-        System.out.println("Строки: " + strings);
-        System.out.println();
+        saveList(longs);
+        saveList(doubles);
+        saveList(strings);
+    }
+
+    private static void loadToList(String fullFileName, List<String> receiverList) {
+        if (receiverList == null) {
+            receiverList = new ArrayList<>();
+        }
+
+        try {
+            FileReader fileReader = new FileReader(fullFileName);
+            BufferedReader reader = new BufferedReader(fileReader);
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                receiverList.add(line);
+            }
+
+            reader.close();
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+        }
+    }
+
+    private static void saveList(List<?> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        String dataType = list.getFirst().getClass().getSimpleName() + "s";
+        String fullFileName = resultPath + File.separator + filePrefix + dataType.toLowerCase() + ".txt";
+
+        try {
+            FileWriter fileWriter = new FileWriter(fullFileName);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+
+            for (Object item : list) {
+                writer.write(item.toString());
+                writer.newLine();
+            }
+
+            writer.close();
+
+            System.out.println("Данные успешно сохранен в файл: " + fullFileName);
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+        }
     }
 }
