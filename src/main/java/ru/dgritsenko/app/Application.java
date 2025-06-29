@@ -37,14 +37,7 @@ public class Application {
     public static void main(String[] args) {
         currentDir = System.getProperty("user.dir");
 
-        // Параметры по умолчанию
-        sourcePaths = new ArrayList<>();
-        resultPath = currentDir;
-        filePrefix = "";
-        addToFile = false;
-
-        List<String> params = new ArrayList<>(Arrays.asList(args));
-        setParams(params);
+        setParams(args);
 
         List<String> inputtList = new ArrayList<>();
 
@@ -56,7 +49,14 @@ public class Application {
         sortListAndSave(inputtList);
     }
 
-    private static void setParams(List<String> args) {
+    private static void setParams(String[] args) {
+        // Параметры по умолчанию
+        sourcePaths = new ArrayList<>();
+        resultPath = currentDir;
+        filePrefix = "";
+        addToFile = false;
+
+        // Возможные параметры
         List<String> possibleParams = new ArrayList<>();
         possibleParams.add("-o");
         possibleParams.add("-p");
@@ -64,9 +64,13 @@ public class Application {
         possibleParams.add("-s");
         possibleParams.add("-f");
 
-        for (int i = 0; i < args.size(); i++) {
-            String arg = args.get(i);
-            String nextArg = i == args.size() - 1 ? "" : args.get(i + 1);
+        // Преобразование в ArrayList для удобства
+        List<String> params = new ArrayList<>(Arrays.asList(args));
+
+        // Парсинг параметров из строки запуска
+        for (int i = 0; i < params.size(); i++) {
+            String arg = params.get(i);
+            String nextArg = i == params.size() - 1 ? "" : params.get(i + 1);
             boolean isNextArgParam = possibleParams.contains(nextArg);
 
             if (arg.equals("-o") && !isNextArgParam) {
@@ -81,23 +85,23 @@ public class Application {
                 simpleStatistic = true;
             } else if (arg.equals("-f")) {
                 fullStatistic = true;
-            } else if (!isNextArgParam && arg.endsWith(".txt")) {
+            } else if (arg.endsWith(".txt")) {
                 sourcePaths.add(arg);
             }
         }
     }
 
     private static void sortListAndSave(List<String> list) {
-        List<String> lines = new ArrayList<>(list);
-
-        Pattern longPattern = Pattern.compile("^-?\\d+$");
-        Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
-
+        // Списки для отсортированных данных
         List <Long> longs = new ArrayList<>();
         List <Double> doubles = new ArrayList<>();
         List <String> strings = new ArrayList<>();
 
-        for (String line : lines) {
+        // Паттерны для проверки данных на тип данных
+        Pattern longPattern = Pattern.compile("^-?\\d+$");
+        Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
+
+        for (String line : list) {
             line = line.trim();
 
             if (longPattern.matcher(line).matches()) {
@@ -109,16 +113,19 @@ public class Application {
             }
         }
 
+        // Сохранение отсортированных данных
         saveList(longs);
         saveList(doubles);
         saveList(strings);
     }
 
     private static void loadToList(String fullFileName, List<String> receiverList) {
+        // На всякий случай
         if (receiverList == null) {
             receiverList = new ArrayList<>();
         }
 
+        // Чтение файла
         try {
             FileReader fileReader = new FileReader(fullFileName);
             BufferedReader reader = new BufferedReader(fileReader);
@@ -135,15 +142,18 @@ public class Application {
     }
 
     private static void saveList(List<?> list) {
+        // Проверка на необходимость сохранения
         if (list == null || list.isEmpty()) {
             return;
         }
 
+        // Определение имени файла исходя из типов значения списка
         String dataType = list.getFirst().getClass().getSimpleName() + "s";
         String fullFileName = resultPath + File.separator + filePrefix + dataType.toLowerCase() + ".txt";
 
+        // Запись файла/в файл
         try {
-            FileWriter fileWriter = new FileWriter(fullFileName);
+            FileWriter fileWriter = new FileWriter(fullFileName, addToFile);
             BufferedWriter writer = new BufferedWriter(fileWriter);
 
             for (Object item : list) {
@@ -152,8 +162,6 @@ public class Application {
             }
 
             writer.close();
-
-            System.out.println("Данные успешно сохранен в файл: " + fullFileName);
         } catch (Exception exception) {
             System.out.println(exception.getMessage());
         }
