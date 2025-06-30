@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class Sorter {
-    List<String> strings;
-    List<Long> longs;
-    List<Double> doubles;
+    private final List<String> strings;
+    private final List<Long> longs;
+    private final List<Double> doubles;
 
     // -----------------------------------------------------------------------------------------------------------------
     // Конструкторы
@@ -24,7 +24,7 @@ public class Sorter {
     // -----------------------------------------------------------------------------------------------------------------
 
     public List<String> getStrings() {
-        return strings;
+        return strings; // todo заменить на возврат копии списка
     }
 
     public List<Long> getLongs() {

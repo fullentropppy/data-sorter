@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class Application {
     private static String currentDir;
@@ -12,7 +11,7 @@ public class Application {
     private static List<String> sourcePaths;
     private static String resultPath;
     private static String filePrefix;
-    private static boolean addToFile;
+    private static boolean append;
     private static boolean simpleStatistic;
     private static boolean fullStatistic;
 
@@ -24,13 +23,13 @@ public class Application {
      *  <li> {@code -a} - режим добавления в существующие файлы вместо перезаписи
      *  <li> {@code -s} - краткая статистика
      *  <li> {@code -f} - полная статистика
-     *  <li> {@code .txt} - прочие параметры начинающиеся {@code .txt}
-     *  воспринимаются как имена файлов для загрузки данных для сортировки.
+     *  <li> {@code .txt} - прочие параметры, начинающиеся {@code .txt}
+     *  воспринимаются как имена файлов для загрузки данных с последующей сортировкой
      *  <ul>
      *      <li> если указано только имя файла, то будет выполнена попытка загрузить файл
      *      из каталога, где запущено приложение
      *      <li> если указано полное имя файла, будет выполнена попытка загрузить файл
-     *      из с использованием полного имени
+     *      с использованием полного имени
      *  </ul>
      * </ul>
      */
@@ -41,12 +40,20 @@ public class Application {
 
         List<String> inputtList = new ArrayList<>();
 
+        FileDataService fileDataService = new FileDataService();
+        fileDataService.setSavingParameters(resultPath, filePrefix, append);
+
         for (String sourcePath : sourcePaths) {
             String fileFullName = sourcePath.contains(File.separator) ? sourcePath : currentDir + File.separator + sourcePath;
-            loadToList(fileFullName, inputtList);
+            fileDataService.loadToList(fileFullName, inputtList);
         }
 
-        sortListAndSave(inputtList);
+        Sorter sorter = new Sorter();
+        sorter.sortStringsToCollections(inputtList);
+
+        fileDataService.saveList(sorter.getStrings());
+        fileDataService.saveList(sorter.getDoubles());
+        fileDataService.saveList(sorter.getLongs());
     }
 
     private static void setParams(String[] args) {
@@ -54,7 +61,7 @@ public class Application {
         sourcePaths = new ArrayList<>();
         resultPath = currentDir;
         filePrefix = "";
-        addToFile = false;
+        append = false;
 
         // Возможные параметры
         List<String> possibleParams = new ArrayList<>();
@@ -80,7 +87,7 @@ public class Application {
                 filePrefix = nextArg;
                 i++;
             } else if (arg.equals("-a")) {
-                addToFile = true;
+                append = true;
             } else if (arg.equals("-s")) {
                 simpleStatistic = true;
             } else if (arg.equals("-f")) {
@@ -88,82 +95,6 @@ public class Application {
             } else if (arg.endsWith(".txt")) {
                 sourcePaths.add(arg);
             }
-        }
-    }
-
-    private static void sortListAndSave(List<String> list) {
-        // Списки для отсортированных данных
-        List <Long> longs = new ArrayList<>();
-        List <Double> doubles = new ArrayList<>();
-        List <String> strings = new ArrayList<>();
-
-        // Паттерны для проверки данных на тип данных
-        Pattern longPattern = Pattern.compile("^-?\\d+$");
-        Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
-
-        for (String line : list) {
-            line = line.trim();
-
-            if (longPattern.matcher(line).matches()) {
-                longs.add(Long.parseLong(line));
-            } else if (doublePattern.matcher(line).matches()) {
-                doubles.add(Double.parseDouble(line));
-            } else {
-                strings.add(line);
-            }
-        }
-
-        // Сохранение отсортированных данных
-        saveList(longs);
-        saveList(doubles);
-        saveList(strings);
-    }
-
-    private static void loadToList(String fullFileName, List<String> receiverList) {
-        // На всякий случай
-        if (receiverList == null) {
-            receiverList = new ArrayList<>();
-        }
-
-        // Чтение файла
-        try {
-            FileReader fileReader = new FileReader(fullFileName);
-            BufferedReader reader = new BufferedReader(fileReader);
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                receiverList.add(line);
-            }
-
-            reader.close();
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
-        }
-    }
-
-    private static void saveList(List<?> list) {
-        // Проверка на необходимость сохранения
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-
-        // Определение имени файла исходя из типов значения списка
-        String dataType = list.getFirst().getClass().getSimpleName() + "s";
-        String fullFileName = resultPath + File.separator + filePrefix + dataType.toLowerCase() + ".txt";
-
-        // Запись файла/в файл
-        try {
-            FileWriter fileWriter = new FileWriter(fullFileName, addToFile);
-            BufferedWriter writer = new BufferedWriter(fileWriter);
-
-            for (Object item : list) {
-                writer.write(item.toString());
-                writer.newLine();
-            }
-
-            writer.close();
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
         }
     }
 }
