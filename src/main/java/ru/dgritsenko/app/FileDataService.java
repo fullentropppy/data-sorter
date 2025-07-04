@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileDataService {
-    private String currentDir;
+    private final String currentDir;
     private String resultPath;
     private String filePrefix;
     private boolean append;
@@ -23,10 +23,10 @@ public class FileDataService {
     // Сеттеры
     // -----------------------------------------------------------------------------------------------------------------
 
-    public void setSavingParameters(String resultPath, String filePrefix, boolean addend) {
+    public void setSavingParameters(String resultPath, String filePrefix, boolean append) {
         this.resultPath = resultPath;
         this.filePrefix = filePrefix;
-        this.append = addend;
+        this.append = append;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,6 @@ public class FileDataService {
     // -----------------------------------------------------------------------------------------------------------------
 
     public void loadToList(String fullFileName, List<String> receiverList) {
-        // Проверка на необходимость загрузки
         if (receiverList == null) {
             receiverList = new ArrayList<>();
         }
@@ -50,9 +49,10 @@ public class FileDataService {
             }
 
             reader.close();
-        } catch (Exception exception) {
-            String errMsg = MessageFormat.format("Не удалось загрузить файл ''{0}'': {1}",
-                    fullFileName, exception.getMessage()
+        } catch (Exception ex) {
+            String errMsg = MessageFormat.format(
+                    "Не удалось загрузить файл ''{0}'': {1}",
+                    fullFileName, ex.getMessage()
             );
             System.out.println(errMsg);
         }
@@ -65,8 +65,8 @@ public class FileDataService {
         }
 
         // Определение имени файла исходя из типов значения списка
-        String dataType = list.getFirst().getClass().getSimpleName() + "s";
-        String fullFileName = resultPath + File.separator + filePrefix + dataType.toLowerCase() + ".txt";
+        String dataTypeName = list.getFirst().getClass().getSimpleName() + "s";
+        String fullFileName = resultPath + File.separator + filePrefix + dataTypeName.toLowerCase() + ".txt";
 
         // Запись файла/в файл
         try {
@@ -80,7 +80,8 @@ public class FileDataService {
 
             writer.close();
         } catch (Exception exception) {
-            String errMsg = MessageFormat.format("Не удалось сохранить файл ''{0}'': {1}",
+            String errMsg = MessageFormat.format(
+                    "Не удалось сохранить файл ''{0}'': {1}",
                     fullFileName, exception.getMessage()
             );
             System.out.println(errMsg);

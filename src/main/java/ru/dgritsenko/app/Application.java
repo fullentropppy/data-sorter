@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class Application {
     private static String currentDir;
@@ -12,7 +12,7 @@ public class Application {
     private static List<String> sourcePaths;
     private static String resultPath;
     private static String filePrefix;
-    private static boolean addToFile;
+    private static boolean append;
     private static boolean simpleStatistic;
     private static boolean fullStatistic;
 
@@ -24,37 +24,71 @@ public class Application {
      *  <li> {@code -a} - режим добавления в существующие файлы вместо перезаписи
      *  <li> {@code -s} - краткая статистика
      *  <li> {@code -f} - полная статистика
-     *  <li> {@code .txt} - прочие параметры начинающиеся {@code .txt}
-     *  воспринимаются как имена файлов для загрузки данных для сортировки.
+     *  <li> {@code .txt} - прочие параметры, начинающиеся {@code .txt}
+     *  воспринимаются как имена файлов для загрузки данных с последующей сортировкой
      *  <ul>
      *      <li> если указано только имя файла, то будет выполнена попытка загрузить файл
      *      из каталога, где запущено приложение
      *      <li> если указано полное имя файла, будет выполнена попытка загрузить файл
-     *      из с использованием полного имени
+     *      с использованием полного имени
      *  </ul>
      * </ul>
      */
     public static void main(String[] args) {
         currentDir = System.getProperty("user.dir");
 
+        // todo вынести весь следующий код метода в отдельный метод
         setParams(args);
 
         List<String> inputtList = new ArrayList<>();
 
+        FileDataService fileDataService = new FileDataService();
+        fileDataService.setSavingParameters(resultPath, filePrefix, append);
+
         for (String sourcePath : sourcePaths) {
             String fileFullName = sourcePath.contains(File.separator) ? sourcePath : currentDir + File.separator + sourcePath;
-            loadToList(fileFullName, inputtList);
+            fileDataService.loadToList(fileFullName, inputtList);
         }
 
-        sortListAndSave(inputtList);
+        Sorter sorter = new Sorter();
+        sorter.sortStringsToCollections(inputtList);
+
+        fileDataService.saveList(sorter.getStrings());
+        fileDataService.saveList(sorter.getDoubles());
+        fileDataService.saveList(sorter.getLongs());
+
+        List<Long> longList = List.of(
+                100L,
+                -42L,
+                -1_000_000L);
+
+        List<String> stringList = List.of(
+                "Hello, world!",
+                "Java 17",
+                "Stream API",
+                "Генерация данных",
+                "Пример строки"
+        );
+
+        List<Double> doubleList = List.of(
+                3.14,
+                -2.718,
+                0.0,
+                -1.5,
+                1.61803398875,
+                -0.001,
+                2.99792458e8
+        );
+
     }
 
     private static void setParams(String[] args) {
         // Параметры по умолчанию
+        // todo подумать над загрузкой файлов с пробелами в пути
         sourcePaths = new ArrayList<>();
         resultPath = currentDir;
         filePrefix = "";
-        addToFile = false;
+        append = false;
 
         // Возможные параметры
         List<String> possibleParams = new ArrayList<>();
@@ -80,7 +114,7 @@ public class Application {
                 filePrefix = nextArg;
                 i++;
             } else if (arg.equals("-a")) {
-                addToFile = true;
+                append = true;
             } else if (arg.equals("-s")) {
                 simpleStatistic = true;
             } else if (arg.equals("-f")) {
@@ -91,79 +125,86 @@ public class Application {
         }
     }
 
-    private static void sortListAndSave(List<String> list) {
-        // Списки для отсортированных данных
-        List <Long> longs = new ArrayList<>();
-        List <Double> doubles = new ArrayList<>();
-        List <String> strings = new ArrayList<>();
-
-        // Паттерны для проверки данных на тип данных
-        Pattern longPattern = Pattern.compile("^-?\\d+$");
-        Pattern doublePattern = Pattern.compile("^-?\\d+\\.\\d+([eE][-+]?\\d+)?$|^-?\\d+[eE][-+]?\\d+$");
-
-        for (String line : list) {
-            line = line.trim();
-
-            if (longPattern.matcher(line).matches()) {
-                longs.add(Long.parseLong(line));
-            } else if (doublePattern.matcher(line).matches()) {
-                doubles.add(Double.parseDouble(line));
-            } else {
-                strings.add(line);
-            }
-        }
-
-        // Сохранение отсортированных данных
-        saveList(longs);
-        saveList(doubles);
-        saveList(strings);
-    }
-
-    private static void loadToList(String fullFileName, List<String> receiverList) {
-        // На всякий случай
-        if (receiverList == null) {
-            receiverList = new ArrayList<>();
-        }
-
-        // Чтение файла
-        try {
-            FileReader fileReader = new FileReader(fullFileName);
-            BufferedReader reader = new BufferedReader(fileReader);
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                receiverList.add(line);
-            }
-
-            reader.close();
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
-        }
-    }
-
-    private static void saveList(List<?> list) {
-        // Проверка на необходимость сохранения
-        if (list == null || list.isEmpty()) {
+    public void shortStatistic (Sorter sorter) {
+        List<String> strings = sorter.getStrings();
+        if (strings == null || strings.isEmpty())
             return;
-        }
+        int stringsSize = strings.size();
 
-        // Определение имени файла исходя из типов значения списка
-        String dataType = list.getFirst().getClass().getSimpleName() + "s";
-        String fullFileName = resultPath + File.separator + filePrefix + dataType.toLowerCase() + ".txt";
+        List<Long> longs = sorter.getLongs();
+        if (longs == null || longs.isEmpty())
+            return;
+        int longsSize = longs.size();
 
-        // Запись файла/в файл
-        try {
-            FileWriter fileWriter = new FileWriter(fullFileName, addToFile);
-            BufferedWriter writer = new BufferedWriter(fileWriter);
+        List<Double> doubles = sorter.getDoubles();
+        if (doubles == null || doubles.isEmpty())
+            return;
+        int doublesSize = doubles.size();
+    }
 
-            for (Object item : list) {
-                writer.write(item.toString());
-                writer.newLine();
+    public void fullStatistic (Sorter sorter) {
+        shortStatistic(sorter);
+
+        List<String> strings = sorter.getStrings();
+        if (strings == null || strings.isEmpty())
+            return;
+
+        String shortestString = strings.getFirst();
+        String longestString = strings.getFirst();
+        int minLength = shortestString.length();
+        int maxLength = longestString.length();
+
+        for (String string : strings) {
+            int length = string.length();
+            if (length < minLength) {
+                minLength = length;
+            } else {
+                if (length > maxLength) {
+                    maxLength = length;
+                }
             }
-
-            writer.close();
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
         }
+
+        List<Double> doubles = sorter.getDoubles();
+        if (doubles == null || doubles.isEmpty())
+            return;
+
+        double sum = 0;
+        double min = doubles.getFirst();
+        double max = doubles.getFirst();
+
+        for (double number : doubles) {
+            sum += number;
+
+            if (number < min) {
+                min = number;
+            }
+            if (number > max) {
+                max = number;
+            }
+        }
+
+        double average = sum / doubles.size();
+
+        List<Long> longs = sorter.getLongs();
+        if (longs == null || longs.isEmpty())
+            return;
+
+        long sumLong = 0;
+        long minLong = longs.getFirst();
+        long maxLong = longs.getFirst();
+
+        for (long number : longs) {
+            sumLong += number;
+
+            if (number < min) {
+                minLong = number;
+            }
+            if (number > max) {
+                maxLong = number;
+            }
+        }
+
+        long averageLong = sumLong / longs.size();
     }
 }
