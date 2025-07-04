@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class Application {
     private static String currentDir;
@@ -36,6 +37,7 @@ public class Application {
     public static void main(String[] args) {
         currentDir = System.getProperty("user.dir");
 
+        // todo вынести весь следующий код метода в отдельный метод
         setParams(args);
 
         List<String> inputtList = new ArrayList<>();
@@ -54,10 +56,35 @@ public class Application {
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
         fileDataService.saveList(sorter.getLongs());
+
+        List<Long> longList = List.of(
+                100L,
+                -42L,
+                -1_000_000L);
+
+        List<String> stringList = List.of(
+                "Hello, world!",
+                "Java 17",
+                "Stream API",
+                "Генерация данных",
+                "Пример строки"
+        );
+
+        List<Double> doubleList = List.of(
+                3.14,
+                -2.718,
+                0.0,
+                -1.5,
+                1.61803398875,
+                -0.001,
+                2.99792458e8
+        );
+
     }
 
     private static void setParams(String[] args) {
         // Параметры по умолчанию
+        // todo подумать над загрузкой файлов с пробелами в пути
         sourcePaths = new ArrayList<>();
         resultPath = currentDir;
         filePrefix = "";
@@ -96,5 +123,88 @@ public class Application {
                 sourcePaths.add(arg);
             }
         }
+    }
+
+    public void shortStatistic (Sorter sorter) {
+        List<String> strings = sorter.getStrings();
+        if (strings == null || strings.isEmpty())
+            return;
+        int stringsSize = strings.size();
+
+        List<Long> longs = sorter.getLongs();
+        if (longs == null || longs.isEmpty())
+            return;
+        int longsSize = longs.size();
+
+        List<Double> doubles = sorter.getDoubles();
+        if (doubles == null || doubles.isEmpty())
+            return;
+        int doublesSize = doubles.size();
+    }
+
+    public void fullStatistic (Sorter sorter) {
+        shortStatistic(sorter);
+
+        List<String> strings = sorter.getStrings();
+        if (strings == null || strings.isEmpty())
+            return;
+
+        String shortestString = strings.getFirst();
+        String longestString = strings.getFirst();
+        int minLength = shortestString.length();
+        int maxLength = longestString.length();
+
+        for (String string : strings) {
+            int length = string.length();
+            if (length < minLength) {
+                minLength = length;
+            } else {
+                if (length > maxLength) {
+                    maxLength = length;
+                }
+            }
+        }
+
+        List<Double> doubles = sorter.getDoubles();
+        if (doubles == null || doubles.isEmpty())
+            return;
+
+        double sum = 0;
+        double min = doubles.getFirst();
+        double max = doubles.getFirst();
+
+        for (double number : doubles) {
+            sum += number;
+
+            if (number < min) {
+                min = number;
+            }
+            if (number > max) {
+                max = number;
+            }
+        }
+
+        double average = sum / doubles.size();
+
+        List<Long> longs = sorter.getLongs();
+        if (longs == null || longs.isEmpty())
+            return;
+
+        long sumLong = 0;
+        long minLong = longs.getFirst();
+        long maxLong = longs.getFirst();
+
+        for (long number : longs) {
+            sumLong += number;
+
+            if (number < min) {
+                minLong = number;
+            }
+            if (number > max) {
+                maxLong = number;
+            }
+        }
+
+        long averageLong = sumLong / longs.size();
     }
 }

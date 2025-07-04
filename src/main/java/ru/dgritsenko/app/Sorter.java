@@ -28,11 +28,11 @@ public class Sorter {
     }
 
     public List<Long> getLongs() {
-        return longs;
+        return longs; // todo заменить на возврат копии списка
     }
 
     public List<Double> getDoubles() {
-        return doubles;
+        return doubles; // todo заменить на возврат копии списка
     }
 
     // -----------------------------------------------------------------------------------------------------------------
