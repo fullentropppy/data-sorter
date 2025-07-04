@@ -24,15 +24,15 @@ public class Sorter {
     // -----------------------------------------------------------------------------------------------------------------
 
     public List<String> getStrings() {
-        return strings; // todo заменить на возврат копии списка
+        return List.copyOf(strings);
     }
 
     public List<Long> getLongs() {
-        return longs; // todo заменить на возврат копии списка
+        return List.copyOf(longs);
     }
 
     public List<Double> getDoubles() {
-        return doubles; // todo заменить на возврат копии списка
+        return List.copyOf(doubles);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
