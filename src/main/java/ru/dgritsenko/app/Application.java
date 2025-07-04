@@ -1,10 +1,8 @@
 package ru.dgritsenko.app;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.IntStream;
+import java.text.MessageFormat;
+import java.util.*;
 
 public class Application {
     private static String currentDir;
@@ -53,33 +51,12 @@ public class Application {
         Sorter sorter = new Sorter();
         sorter.sortStringsToCollections(inputtList);
 
+        printShortStatistic(sorter);
+        fullStatistic(sorter);
+
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
         fileDataService.saveList(sorter.getLongs());
-
-        List<Long> longList = List.of(
-                100L,
-                -42L,
-                -1_000_000L);
-
-        List<String> stringList = List.of(
-                "Hello, world!",
-                "Java 17",
-                "Stream API",
-                "Генерация данных",
-                "Пример строки"
-        );
-
-        List<Double> doubleList = List.of(
-                3.14,
-                -2.718,
-                0.0,
-                -1.5,
-                1.61803398875,
-                -0.001,
-                2.99792458e8
-        );
-
     }
 
     private static void setParams(String[] args) {
@@ -125,29 +102,31 @@ public class Application {
         }
     }
 
-    public void shortStatistic (Sorter sorter) {
-        List<String> strings = sorter.getStrings();
-        if (strings == null || strings.isEmpty())
-            return;
-        int stringsSize = strings.size();
-
-        List<Long> longs = sorter.getLongs();
-        if (longs == null || longs.isEmpty())
-            return;
-        int longsSize = longs.size();
-
-        List<Double> doubles = sorter.getDoubles();
-        if (doubles == null || doubles.isEmpty())
-            return;
-        int doublesSize = doubles.size();
+    public static void printShortStatistic(Sorter sorter) {
+        Map<String, Integer> statistic = getShortStatistic(sorter);
+        String msg = MessageFormat.format(
+                "*** Краткая статистика ***" +
+                "\nКоличество элементов типа Строка: {0}" +
+                "\nКоличество элементов типа Целое число: {1}" +
+                "\nКоличество элементов типа Вещественное число: {2}",
+                statistic.get("String"),
+                statistic.get("Longs"),
+                statistic.get("Strings"));
+        System.out.println(msg);
     }
 
-    public void fullStatistic (Sorter sorter) {
-        shortStatistic(sorter);
+    private static Map<String, Integer> getShortStatistic(Sorter sorter) {
+        Map<String, Integer> statistic = new HashMap<>();
+        statistic.put("Strings", sorter.getStrings().size());
+        statistic.put("Longs", sorter.getLongs().size());
+        statistic.put("Doubles", sorter.getDoubles().size());
 
+        return statistic;
+    }
+
+    public static void fullStatistic (Sorter sorter) {
+        // Получение данных по строкам: мин и макс длина
         List<String> strings = sorter.getStrings();
-        if (strings == null || strings.isEmpty())
-            return;
 
         String shortestString = strings.getFirst();
         String longestString = strings.getFirst();
@@ -165,9 +144,8 @@ public class Application {
             }
         }
 
+        // Получение данных по вещественным числам: мин, макс, сумма и сред
         List<Double> doubles = sorter.getDoubles();
-        if (doubles == null || doubles.isEmpty())
-            return;
 
         double sum = 0;
         double min = doubles.getFirst();
@@ -178,17 +156,15 @@ public class Application {
 
             if (number < min) {
                 min = number;
-            }
-            if (number > max) {
+            } else if (number > max) {
                 max = number;
             }
         }
 
         double average = sum / doubles.size();
 
+        // Получение данных по целым числам: мин, макс, сумма и сред
         List<Long> longs = sorter.getLongs();
-        if (longs == null || longs.isEmpty())
-            return;
 
         long sumLong = 0;
         long minLong = longs.getFirst();
@@ -199,12 +175,11 @@ public class Application {
 
             if (number < min) {
                 minLong = number;
-            }
-            if (number > max) {
+            } else if (number > max) {
                 maxLong = number;
             }
         }
 
-        long averageLong = sumLong / longs.size();
+        double averageLong = (double) sumLong / longs.size();
     }
 }

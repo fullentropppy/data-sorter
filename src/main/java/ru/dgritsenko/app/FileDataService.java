@@ -79,6 +79,12 @@ public class FileDataService {
             }
 
             writer.close();
+
+            String msg = MessageFormat.format(
+                    "Сохранен файл со значениями типа {0}: {1}",
+                    getFileValuesTypeView(dataTypeName), fullFileName
+            );
+            System.out.println(msg);
         } catch (Exception exception) {
             String errMsg = MessageFormat.format(
                     "Не удалось сохранить файл ''{0}'': {1}",
@@ -86,5 +92,21 @@ public class FileDataService {
             );
             System.out.println(errMsg);
         }
+    }
+
+    private String getFileValuesTypeView(String dataTypeName) {
+        String view = "";
+
+        if (dataTypeName == null) {
+            view = "";
+        } else if (dataTypeName.equals("Strings")) {
+            view = "Строка";
+        } else if (dataTypeName.equals("Longs")) {
+            view = "Целое число";
+        } else if (dataTypeName.equals("Doubles")) {
+            view = "Вещественное число";
+        }
+
+        return view;
     }
 }
