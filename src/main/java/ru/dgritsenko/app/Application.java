@@ -1,18 +1,31 @@
 package ru.dgritsenko.app;
 
 import java.io.*;
-import java.text.MessageFormat;
 import java.util.*;
 
+// todo: добавить разделители между методами (//---...)
+// todo: отсортировать методы (https://sky.pro/wiki/java/standartnaya-sortirovka-metodov-v-java-uluchshenie-organizatsii/)
+// todo: добавить комментарии в код опционально (в этом классе и/или остальных)
+// todo: по окончании разработки и тестирования написать Javadoc для всех методов
 public class Application {
-    private static String currentDir;
+    private static final String currentDir;
 
-    private static List<String> sourcePaths;
+    private static final List<String> sourcePaths;
     private static String resultPath;
     private static String filePrefix;
     private static boolean append;
-    private static boolean simpleStatistic;
-    private static boolean fullStatistic;
+    private static boolean showSimpleStatistic; // todo: использовать значение поля
+    private static boolean showFullStatistic; // todo: использовать значение поля
+
+    static {
+        currentDir = System.getProperty("user.dir");
+
+        // Параметры по умолчанию
+        sourcePaths = new ArrayList<>();
+        resultPath = currentDir;
+        filePrefix = "";
+        append = false;
+    }
 
     /**
      * Возможные параметры запуска:
@@ -22,7 +35,7 @@ public class Application {
      *  <li> {@code -a} - режим добавления в существующие файлы вместо перезаписи
      *  <li> {@code -s} - краткая статистика
      *  <li> {@code -f} - полная статистика
-     *  <li> {@code .txt} - прочие параметры, начинающиеся {@code .txt}
+     *  <li> {@code .txt} - прочие параметры, заканчивающиеся {@code .txt}
      *  воспринимаются как имена файлов для загрузки данных с последующей сортировкой
      *  <ul>
      *      <li> если указано только имя файла, то будет выполнена попытка загрузить файл
@@ -33,13 +46,11 @@ public class Application {
      * </ul>
      */
     public static void main(String[] args) {
-        currentDir = System.getProperty("user.dir");
-        startFileProcessing(args);
+        setParams(args);
+        sortData();
     }
 
-    private static void startFileProcessing(String[] args) {
-        setParams(args);
-
+    private static void sortData() {
         List<String> inputtList = new ArrayList<>();
 
         FileDataService fileDataService = new FileDataService();
@@ -53,8 +64,9 @@ public class Application {
         Sorter sorter = new Sorter();
         sorter.sortStringsToCollections(inputtList);
 
-        Statistic.printShortStatistic(sorter);
-        Statistic.printFullStatistic(sorter);
+        Statistic statistic = new Statistic(sorter);
+        statistic.printShortStatistic();
+        statistic.printFullStatistic();
 
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
@@ -62,13 +74,6 @@ public class Application {
     }
 
     private static void setParams(String[] args) {
-        // Параметры по умолчанию
-        // todo подумать над загрузкой файлов с пробелами в пути
-        sourcePaths = new ArrayList<>();
-        resultPath = currentDir;
-        filePrefix = "";
-        append = false;
-
         // Возможные параметры
         List<String> possibleParams = new ArrayList<>();
         possibleParams.add("-o");
@@ -95,9 +100,9 @@ public class Application {
             } else if (arg.equals("-a")) {
                 append = true;
             } else if (arg.equals("-s")) {
-                simpleStatistic = true;
+                showSimpleStatistic = true;
             } else if (arg.equals("-f")) {
-                fullStatistic = true;
+                showFullStatistic = true;
             } else if (arg.endsWith(".txt")) {
                 sourcePaths.add(arg);
             }

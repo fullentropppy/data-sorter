@@ -5,27 +5,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// todo: добавить разделители между методами (//---...)
+// todo: отсортировать методы (https://sky.pro/wiki/java/standartnaya-sortirovka-metodov-v-java-uluchshenie-organizatsii/)
+// todo: переписать ключи во всех мапах (выбрать один из стилей для всех: snake_case, camelCase, UPPER_SNAKE_CASE)
 public class Statistic {
-
-    private Sorter sorter;
+    private final Sorter sorter;
 
     public Statistic(Sorter sorter) {
+        this.sorter = sorter;
     }
 
-    public static void printShortStatistic(Sorter sorter) {
-        Map<String, Integer> statistic = getShortStatistic(sorter);
+    public void printShortStatistic() {
+        Map<String, Integer> statistic = getShortStatistic();
+
         String msg = MessageFormat.format(
                 "*** Краткая статистика ***" +
                         "\nКоличество элементов типа Строка: {0}" +
                         "\nКоличество элементов типа Целое число: {1}" +
-                        "\nКоличество элементов типа Вещественное число: {2}",
-                statistic.get("String"),
+                        "\nКоличество элементов типа Вещественное число: {2}\n",
+                statistic.get("Strings"),
                 statistic.get("Longs"),
-                statistic.get("Strings"));
+                statistic.get("Doubles")
+        );
         System.out.println(msg);
     }
 
-    private static Map<String, Integer> getShortStatistic(Sorter sorter) {
+    private Map<String, Integer> getShortStatistic() {
         Map<String, Integer> statistic = new HashMap<>();
         statistic.put("Strings", sorter.getStrings().size());
         statistic.put("Longs", sorter.getLongs().size());
@@ -34,23 +39,25 @@ public class Statistic {
         return statistic;
     }
 
-    public static void printFullStatistic(Sorter sorter) {
-        Map<String, Number> statistic = getFullStatistic(sorter.getStrings(), sorter.getLongs(), sorter.getDoubles());
+    // todo: где то может быть выведено null - проверить, исправить
+    public void printFullStatistic() {
+        Map<String, Number> statistic = getFullStatistic();
+
         String msg = MessageFormat.format(
                 "*** Полная статистика ***" +
                         "\nКоличество элементов типа Строка: {0}" +
-                        "\nДлина самой короткой строки: {1}" +
-                        "\nДлина самой длинной строки: {2}\n" +
+                        "\n- размер самой короткой: {1}" +
+                        "\n- размер самой длинной: {2}\n" +
                         "\nКоличество элементов типа Целое число: {3}" +
-                        "\nЧисло с минимальным значением: {4}" +
-                        "\nЧисло с максимальным значением: {5}" +
-                        "\nСумма целых чисел: {6}" +
-                        "\nСреднее целых чисел: {7}\n" +
+                        "\n- меньшее: {4}" +
+                        "\n- большее: {5}" +
+                        "\n- сумма: {6}" +
+                        "\n- среднее: {7}\n" +
                         "\nКоличество элементов типа Вещественное число: {8}" +
-                        "\nЧисло с минимальным значением: {9}" +
-                        "\nЧисло с максимальным значением: {10}" +
-                        "\nСумма вещественных чисел: {11}" +
-                        "\nСреднее вещественных чисел: {12}",
+                        "\n- меньшее: {9}" +
+                        "\n- большее: {10}" +
+                        "\n- сумма: {11}" +
+                        "\n- среднее: {12}\n",
                 statistic.get("Strings"),
                 statistic.get("Strings min"),
                 statistic.get("Strings max"),
@@ -63,13 +70,18 @@ public class Statistic {
                 statistic.get("Doubles min"),
                 statistic.get("Doubles max"),
                 statistic.get("Doubles sum"),
-                statistic.get("Doubles average"));
+                statistic.get("Doubles average")
+        );
         System.out.println(msg);
     }
 
-    private static Map<String, Number> getFullStatistic (List<String> strings, List<Long> longs, List<Double> doubles) {
+    // todo: разбить метод на несколько, в каждом обрабатывать конкретный тип данных
+    private Map<String, Number> getFullStatistic() {
         Map<String, Number> statistic = new HashMap<>();
-        // Получение данных по строкам: min и max длина
+
+        // Получение данных по строкам: min и max размер
+        List<String> strings = sorter.getStrings();
+
         String shortestString = strings.getFirst();
         String longestString = strings.getFirst();
         int minLength = shortestString.length();
@@ -91,6 +103,8 @@ public class Statistic {
         statistic.put("Strings max", maxLength);
 
         // Получение данных по целым числам: min, max, sum и average
+        List<Long> longs = sorter.getLongs();
+
         long sumLong = 0;
         long minLong = longs.getFirst();
         long maxLong = longs.getFirst();
@@ -106,6 +120,7 @@ public class Statistic {
         }
 
         double averageLong = (double) sumLong / longs.size();
+
         statistic.put("Longs", longs.size());
         statistic.put("Longs min", minLong);
         statistic.put("longs max", maxLong);
@@ -113,6 +128,8 @@ public class Statistic {
         statistic.put("longs average", averageLong);
 
         // Получение данных по вещественным числам: min, max, sum и average
+        List<Double> doubles = sorter.getDoubles();
+
         double sum = 0;
         double min = doubles.getFirst();
         double max = doubles.getFirst();
@@ -128,6 +145,7 @@ public class Statistic {
         }
 
         double averageDouble = sum / doubles.size();
+
         statistic.put("Doubles", doubles.size());
         statistic.put("Doubles min", min);
         statistic.put("Doubles max", max);

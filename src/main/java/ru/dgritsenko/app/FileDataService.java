@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileDataService {
-    private final String currentDir;
+    private final String currentDir; // todo: проверить, нужно ли где то поле или нет, если нет - удалить
     private String resultPath;
     private String filePrefix;
     private boolean append;
@@ -33,6 +33,7 @@ public class FileDataService {
     // Прочие методы
     // -----------------------------------------------------------------------------------------------------------------
 
+    // todo: подумать над загрузкой файлов с пробелами в пути, иначе скорректировать справку в main()
     public void loadToList(String fullFileName, List<String> receiverList) {
         if (receiverList == null) {
             receiverList = new ArrayList<>();
