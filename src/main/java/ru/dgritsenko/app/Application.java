@@ -34,8 +34,10 @@ public class Application {
      */
     public static void main(String[] args) {
         currentDir = System.getProperty("user.dir");
+        startFileProcessing(args);
+    }
 
-        // todo вынести весь следующий код метода в отдельный метод
+    private static void startFileProcessing(String[] args) {
         setParams(args);
 
         List<String> inputtList = new ArrayList<>();
@@ -51,8 +53,8 @@ public class Application {
         Sorter sorter = new Sorter();
         sorter.sortStringsToCollections(inputtList);
 
-        printShortStatistic(sorter);
-        fullStatistic(sorter);
+        Statistic.printShortStatistic(sorter);
+        Statistic.printFullStatistic(sorter);
 
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
@@ -100,86 +102,5 @@ public class Application {
                 sourcePaths.add(arg);
             }
         }
-    }
-
-    public static void printShortStatistic(Sorter sorter) {
-        Map<String, Integer> statistic = getShortStatistic(sorter);
-        String msg = MessageFormat.format(
-                "*** Краткая статистика ***" +
-                "\nКоличество элементов типа Строка: {0}" +
-                "\nКоличество элементов типа Целое число: {1}" +
-                "\nКоличество элементов типа Вещественное число: {2}",
-                statistic.get("String"),
-                statistic.get("Longs"),
-                statistic.get("Strings"));
-        System.out.println(msg);
-    }
-
-    private static Map<String, Integer> getShortStatistic(Sorter sorter) {
-        Map<String, Integer> statistic = new HashMap<>();
-        statistic.put("Strings", sorter.getStrings().size());
-        statistic.put("Longs", sorter.getLongs().size());
-        statistic.put("Doubles", sorter.getDoubles().size());
-
-        return statistic;
-    }
-
-    public static void fullStatistic (Sorter sorter) {
-        // Получение данных по строкам: мин и макс длина
-        List<String> strings = sorter.getStrings();
-
-        String shortestString = strings.getFirst();
-        String longestString = strings.getFirst();
-        int minLength = shortestString.length();
-        int maxLength = longestString.length();
-
-        for (String string : strings) {
-            int length = string.length();
-            if (length < minLength) {
-                minLength = length;
-            } else {
-                if (length > maxLength) {
-                    maxLength = length;
-                }
-            }
-        }
-
-        // Получение данных по вещественным числам: мин, макс, сумма и сред
-        List<Double> doubles = sorter.getDoubles();
-
-        double sum = 0;
-        double min = doubles.getFirst();
-        double max = doubles.getFirst();
-
-        for (double number : doubles) {
-            sum += number;
-
-            if (number < min) {
-                min = number;
-            } else if (number > max) {
-                max = number;
-            }
-        }
-
-        double average = sum / doubles.size();
-
-        // Получение данных по целым числам: мин, макс, сумма и сред
-        List<Long> longs = sorter.getLongs();
-
-        long sumLong = 0;
-        long minLong = longs.getFirst();
-        long maxLong = longs.getFirst();
-
-        for (long number : longs) {
-            sumLong += number;
-
-            if (number < min) {
-                minLong = number;
-            } else if (number > max) {
-                maxLong = number;
-            }
-        }
-
-        double averageLong = (double) sumLong / longs.size();
     }
 }
