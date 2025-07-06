@@ -3,8 +3,6 @@ package ru.dgritsenko.app;
 import java.io.*;
 import java.util.*;
 
-// todo: добавить разделители между методами (//---...)
-// todo: отсортировать методы (https://sky.pro/wiki/java/standartnaya-sortirovka-metodov-v-java-uluchshenie-organizatsii/)
 // todo: добавить комментарии в код опционально (в этом классе и/или остальных)
 // todo: по окончании разработки и тестирования написать Javadoc для всех методов
 public class Application {
@@ -14,8 +12,8 @@ public class Application {
     private static String resultPath;
     private static String filePrefix;
     private static boolean append;
-    private static boolean showSimpleStatistic; // todo: использовать значение поля
-    private static boolean showFullStatistic; // todo: использовать значение поля
+    private static boolean showSimpleStatistic;
+    private static boolean showFullStatistic;
 
     static {
         currentDir = System.getProperty("user.dir");
@@ -50,6 +48,10 @@ public class Application {
         sortData();
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Метод для сортировки данных
+    //------------------------------------------------------------------------------------------------------------------
+
     private static void sortData() {
         List<String> inputtList = new ArrayList<>();
 
@@ -65,13 +67,21 @@ public class Application {
         sorter.sortStringsToCollections(inputtList);
 
         Statistic statistic = new Statistic(sorter);
-        statistic.printShortStatistic();
-        statistic.printFullStatistic();
+
+        if (showSimpleStatistic){
+            statistic.printShortStatistic();
+        } else if (showFullStatistic) {
+            statistic.printFullStatistic();
+        }
 
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
         fileDataService.saveList(sorter.getLongs());
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Метод для установки параметров
+    //------------------------------------------------------------------------------------------------------------------
 
     private static void setParams(String[] args) {
         // Возможные параметры
