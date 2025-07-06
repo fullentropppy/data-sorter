@@ -9,7 +9,7 @@ public class Statistic {
     private final Sorter sorter;
 
     //------------------------------------------------------------------------------------------------------------------
-    // Конструктор
+    // Конструкторы
     //------------------------------------------------------------------------------------------------------------------
 
     public Statistic(Sorter sorter) {
@@ -17,33 +17,31 @@ public class Statistic {
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // Метод для вывода краткой статистики
+    // Вывод в консоль статистики
     //------------------------------------------------------------------------------------------------------------------
 
     public void printShortStatistic() {
         Map<String, Integer> statistic = getShortStatistic();
 
         String msg = MessageFormat.format(
-                "*** Краткая статистика ***" +
+                "\n*** Краткая статистика ***" +
                         "\nКоличество элементов типа Строка: {0}" +
                         "\nКоличество элементов типа Целое число: {1}" +
                         "\nКоличество элементов типа Вещественное число: {2}\n",
-                statistic.get("Strings"),
-                statistic.get("Longs"),
-                statistic.get("Doubles")
+                statistic.get("strings_size"),
+                statistic.get("longs_size"),
+                statistic.get("doubles_size")
         );
         System.out.println(msg);
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-    // Метод для вывода полной статистики
-    //------------------------------------------------------------------------------------------------------------------
-
     public void printFullStatistic() {
         Map<String, Number> statistic = getFullStatistic();
 
+        // Не все double выводятся корректно (например 1.528535047E-25).
+        // Для корректного вывода long и double заранее приведены к строке
         String msg = MessageFormat.format(
-                "*** Полная статистика ***" +
+                "\n*** Полная статистика ***" +
                         "\nКоличество элементов типа Строка: {0}" +
                         "\n- размер самой короткой: {1}" +
                         "\n- размер самой длинной: {2}\n" +
@@ -57,121 +55,127 @@ public class Statistic {
                         "\n- большее: {10}" +
                         "\n- сумма: {11}" +
                         "\n- среднее: {12}\n",
-                statistic.get("Strings"),
-                statistic.get("Strings_min"),
-                statistic.get("Strings_max"),
-                statistic.get("Longs"),
-                statistic.get("Longs_min"),
-                statistic.get("Longs_max"),
-                statistic.get("Longs_sum"),
-                statistic.get("Longs_average"),
-                statistic.get("Doubles"),
-                statistic.get("Doubles_min"),
-                statistic.get("Doubles_max"),
-                statistic.get("Doubles_sum"),
-                statistic.get("Doubles_average")
+                statistic.get("strings_size").toString(),
+                statistic.get("strings_min").toString(),
+                statistic.get("strings_max").toString(),
+                statistic.get("longs_size").toString(),
+                statistic.get("longs_min").toString(),
+                statistic.get("longs_max").toString(),
+                statistic.get("longs_sum").toString(),
+                statistic.get("longs_average").toString(),
+                statistic.get("doubles_size").toString(),
+                statistic.get("doubles_min").toString(),
+                statistic.get("doubles_max").toString(),
+                statistic.get("doubles_sum").toString(),
+                statistic.get("doubles_average").toString()
         );
         System.out.println(msg);
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для получения краткой статистики
+    // Вспомогательные методы для получения статистики
     //------------------------------------------------------------------------------------------------------------------
 
     private Map<String, Integer> getShortStatistic() {
         Map<String, Integer> statistic = new HashMap<>();
-        statistic.put("Strings", sorter.getStrings().size());
-        statistic.put("Longs", sorter.getLongs().size());
-        statistic.put("Doubles", sorter.getDoubles().size());
+
+        statistic.put("strings_size", sorter.getStrings().size());
+        statistic.put("longs_size", sorter.getLongs().size());
+        statistic.put("doubles_size", sorter.getDoubles().size());
 
         return statistic;
     }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для получения полной статистики
-    //------------------------------------------------------------------------------------------------------------------
 
     private Map<String, Number> getFullStatistic() {
         Map<String, Number> statistic = new HashMap<>();
 
-        getStringStatistic(statistic);
-        getLongStatistic(statistic);
-        getDoubleStatistic(statistic);
+        calculateStringStatistic(statistic);
+        calculateLongStatistic(statistic);
+        calculateDoubleStatistic(statistic);
 
         return statistic;
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для получения статистики по типу Строка
+    // Вспомогательные методы для получения данных по полной статистике
     //------------------------------------------------------------------------------------------------------------------
 
-    private void getStringStatistic(Map<String, Number> statistic) {
+    private void calculateStringStatistic(Map<String, Number> statistic) {
         // Получение данных по строкам: min и max размер
         List<String> strings = sorter.getStrings();
 
-        String shortestString = strings.getFirst();
-        String longestString = strings.getFirst();
-        int minLength = shortestString.length();
-        int maxLength = longestString.length();
+        int minLength = Integer.MAX_VALUE;
+        int maxLength = Integer.MIN_VALUE;
 
         for (String string : strings) {
             int length = string.length();
             if (length < minLength) {
                 minLength = length;
-            } else {
-                if (length > maxLength) {
-                    maxLength = length;
-                }
+            }
+
+            if (length > maxLength) {
+                maxLength = length;
             }
         }
 
-        statistic.put("Strings", strings.size());
-        statistic.put("Strings_min", minLength);
-        statistic.put("Strings_max", maxLength);
+        int size = strings.size();
+
+        if (size == 0) {
+            minLength = 0;
+            maxLength = 0;
+        }
+
+        statistic.put("strings_size", size);
+        statistic.put("strings_min", minLength);
+        statistic.put("strings_max", maxLength);
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для получения статистики по типу Целое число
-    //------------------------------------------------------------------------------------------------------------------
-
-    private void getLongStatistic(Map<String, Number> statistic) {
+    private void calculateLongStatistic(Map<String, Number> statistic) {
         // Получение данных по целым числам: min, max, sum и average
         List<Long> longs = sorter.getLongs();
 
-        long sumLong = 0;
-        long minLong = longs.getFirst();
-        long maxLong = longs.getFirst();
+        int size = longs.size();
+        long sum = 0;
+        long min = 0;
+        long max = 0;
+
+        if (size > 0) {
+            min = longs.getFirst();
+            max = min;
+        }
 
         for (long number : longs) {
-            sumLong += number;
+            sum += number;
 
-            if (number < minLong) {
-                minLong = number;
-            } else if (number > maxLong) {
-                maxLong = number;
+            if (number < min) {
+                min = number;
+            } else if (number > max) {
+                max = number;
             }
         }
 
-        double averageLong = (double) sumLong / longs.size();
+        double averageLong = size > 0 ? (double) sum / size : 0;
 
-        statistic.put("Longs", longs.size());
-        statistic.put("Longs_min", minLong);
-        statistic.put("Longs_max", maxLong);
-        statistic.put("Longs_sum", sumLong);
-        statistic.put("Longs_average", averageLong);
+        statistic.put("longs_size", size);
+        statistic.put("longs_min", min);
+        statistic.put("longs_max", max);
+        statistic.put("longs_sum", sum);
+        statistic.put("longs_average", averageLong);
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для получения статистики по типу Вещественное число
-    //------------------------------------------------------------------------------------------------------------------
-
-    private void getDoubleStatistic(Map<String, Number> statistic) {
+    private void calculateDoubleStatistic(Map<String, Number> statistic) {
         // Получение данных по вещественным числам: min, max, sum и average
         List<Double> doubles = sorter.getDoubles();
 
+        int size = doubles.size();
         double sum = 0;
-        double min = doubles.getFirst();
-        double max = doubles.getFirst();
+        double min = 0;
+        double max = 0;
+
+        if (size > 0) {
+            min = doubles.getFirst();
+            max = min;
+        }
 
         for (double number : doubles) {
             sum += number;
@@ -183,12 +187,17 @@ public class Statistic {
             }
         }
 
-        double averageDouble = sum / doubles.size();
+        if (size == 0) {
+            min = 0;
+            max = 0;
+        }
 
-        statistic.put("Doubles", doubles.size());
-        statistic.put("Doubles_min", min);
-        statistic.put("Doubles_max", max);
-        statistic.put("Doubles_sum", sum);
-        statistic.put("Doubles_average", averageDouble);
+        double averageDouble = size > 0 ? sum / size : 0;
+
+        statistic.put("doubles_size", size);
+        statistic.put("doubles_min", min);
+        statistic.put("doubles_max", max);
+        statistic.put("doubles_sum", sum);
+        statistic.put("doubles_average", averageDouble);
     }
 }

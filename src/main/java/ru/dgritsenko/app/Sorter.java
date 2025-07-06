@@ -10,7 +10,7 @@ public class Sorter {
     private final List<Double> doubles;
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Конструктор
+    // Конструкторы
     // -----------------------------------------------------------------------------------------------------------------
 
     public Sorter() {
@@ -36,7 +36,7 @@ public class Sorter {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Метод для сортировки строк из исходящих файлов
+    // Вспомогательные методы
     // -----------------------------------------------------------------------------------------------------------------
 
     public void sortStringsToCollections(List<String> list) {
@@ -51,12 +51,20 @@ public class Sorter {
         for (String line : list) {
             line = line.trim();
 
-            if (longPattern.matcher(line).matches()) {
-                longs.add(Long.parseLong(line));
-            } else if (doublePattern.matcher(line).matches()) {
-                doubles.add(Double.parseDouble(line));
-            } else {
-                strings.add(line);
+            try {
+                if (longPattern.matcher(line).matches()) {
+                    longs.add(Long.parseLong(line));
+                } else if (doublePattern.matcher(line).matches()) {
+                    doubles.add(Double.parseDouble(line));
+                } else {
+                    strings.add(line);
+                }
+            } catch (NumberFormatException exception) {
+                String errMsg = String.format(
+                        "Строка ''{0}'' будет проигнорирована, т.к. не удалось применить паттерн: {1}",
+                        line, exception.getMessage()
+                );
+                System.out.println(errMsg);
             }
         }
     }

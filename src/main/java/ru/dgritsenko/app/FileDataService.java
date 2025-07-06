@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileDataService {
-    private final String currentDir; // todo: проверить, нужно ли где то поле или нет, если нет - удалить
+    private final String currentDir;
     private String resultPath;
     private String filePrefix;
     private boolean append;
@@ -20,7 +20,7 @@ public class FileDataService {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Сеттер
+    // Сеттеры
     // -----------------------------------------------------------------------------------------------------------------
 
     public void setSavingParameters(String resultPath, String filePrefix, boolean append) {
@@ -30,10 +30,9 @@ public class FileDataService {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Метод для загрузки и чтения файлов
+    // Методы загрузки/сохранения данных
     // -----------------------------------------------------------------------------------------------------------------
 
-    // todo: подумать над загрузкой файлов с пробелами в пути, иначе скорректировать справку в main()
     public void loadToList(String fullFileName, List<String> receiverList) {
         if (receiverList == null) {
             receiverList = new ArrayList<>();
@@ -50,18 +49,14 @@ public class FileDataService {
             }
 
             reader.close();
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             String errMsg = MessageFormat.format(
                     "Не удалось загрузить файл ''{0}'': {1}",
-                    fullFileName, ex.getMessage()
+                    fullFileName, exception.getMessage()
             );
             System.out.println(errMsg);
         }
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // Метод для сохранения файлов
-    // -----------------------------------------------------------------------------------------------------------------
 
     public void saveList(List<?> list) {
         // Проверка на необходимость сохранения
@@ -72,6 +67,10 @@ public class FileDataService {
         // Определение имени файла исходя из типов значения списка
         String dataTypeName = list.getFirst().getClass().getSimpleName() + "s";
         String fullFileName = resultPath + File.separator + filePrefix + dataTypeName.toLowerCase() + ".txt";
+
+        if (!fullFileName.contains(currentDir)) {
+            fullFileName = currentDir + File.separator + fullFileName;
+        }
 
         // Запись файла/в файл
         try {
@@ -100,7 +99,7 @@ public class FileDataService {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Вспомогательный метод для отображения типа данных в имени файла
+    // Вспомогательные методы
     // -----------------------------------------------------------------------------------------------------------------
 
     private String getFileValuesTypeView(String dataTypeName) {

@@ -3,8 +3,6 @@ package ru.dgritsenko.app;
 import java.io.*;
 import java.util.*;
 
-// todo: добавить комментарии в код опционально (в этом классе и/или остальных)
-// todo: по окончании разработки и тестирования написать Javadoc для всех методов
 public class Application {
     private static final String currentDir;
 
@@ -12,7 +10,7 @@ public class Application {
     private static String resultPath;
     private static String filePrefix;
     private static boolean append;
-    private static boolean showSimpleStatistic;
+    private static boolean showShortStatistic;
     private static boolean showFullStatistic;
 
     static {
@@ -28,60 +26,59 @@ public class Application {
     /**
      * Возможные параметры запуска:
      * <ul>
-     *  <li> {@code -o} - путь для результатов {@code (-o /some/path)}
-     *  <li> {@code -p} - префикс для выходных файлов {@code (-p result_)}
+     *  <li> {@code -o} - путь для результатов {@code (-o /some/path)}.
+     *  <p>Может быть указан как полный, так и относительный путь
+     *  <li> {@code -p} - префикс для выходных файлов {@code (-p result_)}.
      *  <li> {@code -a} - режим добавления в существующие файлы вместо перезаписи
      *  <li> {@code -s} - краткая статистика
      *  <li> {@code -f} - полная статистика
      *  <li> {@code .txt} - прочие параметры, заканчивающиеся {@code .txt}
-     *  воспринимаются как имена файлов для загрузки данных с последующей сортировкой
-     *  <ul>
-     *      <li> если указано только имя файла, то будет выполнена попытка загрузить файл
-     *      из каталога, где запущено приложение
-     *      <li> если указано полное имя файла, будет выполнена попытка загрузить файл
-     *      с использованием полного имени
-     *  </ul>
+     *  воспринимаются как имена файлов для загрузки данных с последующей сортировкой.
+     *  <p>Может быть указан как полный, так и относительный путь
      * </ul>
      */
     public static void main(String[] args) {
         setParams(args);
-        sortData();
+
+        if (sourcePaths.isEmpty()) {
+            System.out.println("В параметрах запуска не указан ни один txt-файл-источник данных");
+        } else {
+            sortData();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    // Метод для сортировки данных
+    // Вспомогательные методы
     //------------------------------------------------------------------------------------------------------------------
 
     private static void sortData() {
         List<String> inputtList = new ArrayList<>();
 
+        // Загрузка данных из файлов
         FileDataService fileDataService = new FileDataService();
         fileDataService.setSavingParameters(resultPath, filePrefix, append);
 
         for (String sourcePath : sourcePaths) {
-            String fileFullName = sourcePath.contains(File.separator) ? sourcePath : currentDir + File.separator + sourcePath;
-            fileDataService.loadToList(fileFullName, inputtList);
+            fileDataService.loadToList(sourcePath, inputtList);
         }
 
+        // Сортировка данных
         Sorter sorter = new Sorter();
         sorter.sortStringsToCollections(inputtList);
 
+        // Вывод статистики по отсортированным данным
         Statistic statistic = new Statistic(sorter);
-
-        if (showSimpleStatistic){
-            statistic.printShortStatistic();
-        } else if (showFullStatistic) {
+        if (showFullStatistic) {
             statistic.printFullStatistic();
+        } else if (showShortStatistic) {
+            statistic.printShortStatistic();
         }
 
+        // Сохранение отсортированных данных
         fileDataService.saveList(sorter.getStrings());
         fileDataService.saveList(sorter.getDoubles());
         fileDataService.saveList(sorter.getLongs());
     }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // Метод для установки параметров
-    //------------------------------------------------------------------------------------------------------------------
 
     private static void setParams(String[] args) {
         // Возможные параметры
@@ -110,7 +107,7 @@ public class Application {
             } else if (arg.equals("-a")) {
                 append = true;
             } else if (arg.equals("-s")) {
-                showSimpleStatistic = true;
+                showShortStatistic = true;
             } else if (arg.equals("-f")) {
                 showFullStatistic = true;
             } else if (arg.endsWith(".txt")) {
