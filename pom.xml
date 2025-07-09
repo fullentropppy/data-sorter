@@ -3,10 +3,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ru.dgritsenko</groupId>
-  <artifactId>DataSorter</artifactId>
+  <artifactId>data-sorter</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>DataSorter</name>
+  <name>data-sorter</name>
 
   <build>
     <plugins>
@@ -17,7 +17,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>ru.dgritsenko.app.Application</mainClass>
+              <mainClass>ru.dgritsenko.datasorter.Application</mainClass>
             </manifest>
           </archive>
         </configuration>

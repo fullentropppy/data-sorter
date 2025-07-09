@@ -1,4 +1,4 @@
-package ru.dgritsenko.app;
+package ru.dgritsenko.datasorter;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package ru.dgritsenko.app;
+package ru.dgritsenko.datasorter;
 
 import java.text.MessageFormat;
 import java.util.HashMap;

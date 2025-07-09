@@ -1,6 +1,5 @@
-package ru.dgritsenko.app;
+package ru.dgritsenko.datasorter;
 
-import java.io.*;
 import java.util.*;
 
 public class Application {
