@@ -39,16 +39,14 @@ public class FileDataService {
         }
 
         // Чтение файла
-        try {
-            FileReader fileReader = new FileReader(fullFileName);
-            BufferedReader reader = new BufferedReader(fileReader);
-
+        try (
+                FileReader fileReader = new FileReader(fullFileName);
+                BufferedReader reader = new BufferedReader(fileReader)
+        ) {
             String line;
             while ((line = reader.readLine()) != null) {
                 receiverList.add(line);
             }
-
-            reader.close();
         } catch (Exception exception) {
             String errMsg = MessageFormat.format(
                     "Не удалось загрузить файл ''{0}'': {1}",
@@ -73,16 +71,14 @@ public class FileDataService {
         }
 
         // Запись файла/в файл
-        try {
-            FileWriter fileWriter = new FileWriter(fullFileName, append);
-            BufferedWriter writer = new BufferedWriter(fileWriter);
-
+        try (
+                FileWriter fileWriter = new FileWriter(fullFileName, append);
+                BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
             for (Object item : list) {
                 writer.write(item.toString());
                 writer.newLine();
             }
-
-            writer.close();
 
             String msg = MessageFormat.format(
                     "Сохранен файл со значениями типа {0}: {1}",
