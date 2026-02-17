@@ -1,6 +1,6 @@
 ![Java](https://img.shields.io/badge/Java-24-007396?logo=java)
 ![Maven](https://img.shields.io/badge/build-Maven-C71A36?logo=apache-maven)
-[![Version](https://img.shields.io/github/v/release/fullentropppy/todo-list?label=version)](https://github.com/fullentropppy/todo-list/releases)
+[![Version](https://img.shields.io/github/v/release/fullentropppy/data-sorter?label=version)](https://github.com/fullentropppy/data-sorter/releases)
 
 Data Sorter: мини-утилита для сортировки содержимого текстовых файлов по типам данных (целые числа, вещественные числа, строки).
 
